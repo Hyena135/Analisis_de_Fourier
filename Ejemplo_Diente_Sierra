@@ -1,0 +1,107 @@
+clear all   % Limpia el "Workspace"
+clc         % Limpia "Command Window"
+
+
+tf = 10;             % Tiempo total para simular
+T = 2;               % Periodo de la señal
+steps = 10000;       % Número de pasos por periodo
+delta = T/steps;	 % Paso de simulación (delta)
+t=(0:delta:tf);	     % Vector de Tiempo
+
+
+ao = 0.25;               % Valor promedio (CD)
+nComponentes = 1000;     % Numero de armónicos
+suma = 0;               % variable Sumatoria
+wo=2*pi/T;              % Estimación de wo
+fdet = 0;
+
+
+%Sumatoria de Serie de Fourier
+for n = 1:1:nComponentes
+
+
+% 	an=0;
+%     bn=(1-((-1)^n))/(n*pi);
+
+  an=(((-1)^n)-1)/(n*n*pi*pi);
+  bn=(((-1)^(n+1)))/(n*pi);
+
+
+    suma=suma+(an*cos(n*wo*t)+bn*sin(n*wo*t));
+end
+
+
+fdet = ao + suma;  %Serie de Fourier
+
+
+
+
+%Grafiación de resultados
+figure(1);
+plot(t,fdet,'k');
+grid on;
+xlabel('Tiempo   [s]');
+ylabel('Función f(t)  ');
+hold on;
+
+
+
+
+nSpectrum = 21;     % Define cuantos componentes se muestran del espectro
+A(1)= ao;           % EL primer componente será el de C.D.
+phase(1)= 0;        % La fase de la componente de CD siempre será cero
+
+%Ciclo para estimación del espectro
+for n = 1:1:nSpectrum
+    
+%     an=0;
+%     bn=(1-((-1)^n))/(n*pi);
+
+
+   an=(((-1)^n)-1)/(n*n*pi*pi);
+   bn=(((-1)^(n+1)))/(n*pi);
+
+    
+    A(n+1)=sqrt((an^2)+(bn^2)); % Determinacipin de An
+    bn=-bn;                     % Cambio de signo a bn
+  
+    factor=abs(bn/an);          
+
+    if((an > 0)  && (bn > 0))
+        phase(n+1) =  radtodeg(atan(factor));
+    elseif((an < 0)  && (bn > 0))
+        phase(n+1) = (180 - radtodeg(atan(factor)));
+    elseif((an < 0)  && (bn < 0))
+        phase(n+1) = (180 + radtodeg(atan(factor)));
+    elseif((an > 0)  && (bn < 0))
+        phase(n+1) = 360 - radtodeg(atan(factor));
+    elseif((an == 0)  && (bn > 0))
+        phase(n+1) = 90;
+    elseif((an == 0)  && (bn < 0))
+        phase(n+1) = 270;
+    elseif((bn == 0)  && (an > 0))
+        phase(n+1) = 0;
+    elseif((bn == 0)  && (an < 0))
+        phase(n+1) = 180;
+    end
+
+end
+
+componentes=(0:1:nSpectrum); % Define la variable componentes
+
+
+% Imprime el espectro de amplitudes
+figure(3);
+bar(componentes,A,'b');
+xlabel('Armónico   [h]');
+ylabel('Amplitud   [ ]');
+grid on;
+hold on;
+
+% Imprime el espectro de fase
+figure(4);
+bar(componentes,phase,'r');
+xlabel('Armónico   [h]');
+ylabel('Fase   [°]');
+grid on;
+hold on;
